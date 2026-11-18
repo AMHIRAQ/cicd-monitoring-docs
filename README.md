@@ -1,3 +1,5 @@
+<img width="1920" height="1080" alt="Capture d’écran du 2026-11-18 15-23-15" src="https://github.com/user-attachments/assets/dd9d4384-29e5-43f7-8604-a53c62d1819f" />
+<img width="1920" height="1080" alt="Capture d’écran du 2026-11-18 15-23-15" src="https://github.com/user-attachments/assets/280ec752-e562-4a7b-ba01-9a711d62dfe1" />
 # CI/CD Pipeline avec Monitoring Prometheus + Grafana
 
 ## Stack
