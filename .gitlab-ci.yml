@@ -1,0 +1,82 @@
+stages:
+  - test
+  - build
+  - scan
+  - deploy
+
+variables:
+  DOCKER_DRIVER: overlay2
+  IMAGE_BACKEND: $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHORT_SHA
+  IMAGE_FRONTEND: $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHORT_SHA
+
+# ─── TEST ───────────────────────────────────────────────
+test-backend:
+  stage: test
+  image: node:20-alpine
+  script:
+    - cd backend
+    - npm install
+    - npm test
+  only:
+    - merge_requests
+    - main
+
+# ─── BUILD ──────────────────────────────────────────────
+build-backend:
+  stage: build
+  image: docker:24
+  services:
+    - docker:24-dind
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker build -t $IMAGE_BACKEND ./backend
+    - docker push $IMAGE_BACKEND
+  only:
+    - main
+
+build-frontend:
+  stage: build
+  image: docker:24
+  services:
+    - docker:24-dind
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker build -t $IMAGE_FRONTEND ./frontend
+    - docker push $IMAGE_FRONTEND
+  only:
+    - main
+
+# ─── SCAN ───────────────────────────────────────────────
+scan-backend:
+  stage: scan
+  image: docker:24
+  services:
+    - docker:24-dind
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker pull $IMAGE_BACKEND
+    - docker run --rm
+        -v /var/run/docker.sock:/var/run/docker.sock
+        aquasec/trivy:latest image
+        --exit-code 0
+        --severity HIGH,CRITICAL
+        $IMAGE_BACKEND
+  only:
+    - main
+
+# ─── DEPLOY ─────────────────────────────────────────────
+deploy:
+  stage: deploy
+  image: docker:24
+  services:
+    - docker:24-dind
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - |
+      export IMAGE_BACKEND=$IMAGE_BACKEND
+      export IMAGE_FRONTEND=$IMAGE_FRONTEND
+      docker compose -f docker-compose.yml up -d --build
+  environment:
+    name: production
+  only:
+    - main

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>CI/CD Demo</title>
+  <style>
+    body { font-family: sans-serif; max-width: 600px; margin: 50px auto; }
+    button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+    #result { margin-top: 20px; padding: 15px; background: #f0f0f0; border-radius: 5px; }
+  </style>
+</head>
+<body>
+  <h1>CI/CD Pipeline Demo</h1>
+  <button onclick="callApi('/')">Test Backend</button>
+  <button onclick="callApi('/health')">Health Check</button>
+  <button onclick="callApi('/db')">Test DB</button>
+  <div id="result">Clique sur un bouton...</div>
+
+  <script>
+    async function callApi(path) {
+      const res = await fetch('/api' + path);
+      const data = await res.json();
+      document.getElementById('result').textContent = JSON.stringify(data, null, 2);
+    }
+  </script>
+</body>
+</html>
